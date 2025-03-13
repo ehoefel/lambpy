@@ -1,6 +1,7 @@
 
 PRETTY = False
 
+
 def get_source(fn):
     from inspect import getsource
     if not callable(fn):
@@ -135,28 +136,129 @@ def pretty_lambda(s):
         return s.calc_fullname()
 
 
+def pretty_tape(tape):
+    if not hasattr(tape, "step") or tape.step is None:
+        if tape.name:
+            return Format.NAME(tape.name)
+        return tape.calc_fullname()
+
+    if tape.step == "expanded":
+        return tape.calc_fullname()
+
+
 def pretty(s):
     if type(s) == Lambda:
         return pretty_lambda(s)
-    print(s, type(s))
+    if type(s) == Tape:
+        return pretty_tape(s)
+
+    print("not valid pretty type", s, type(s))
     exit()
 
 
 class Tape():
 
-    def __init__(self, *items):
+    def __init__(self, *items, name=None):
+        self.name = name
+
         self.items = list(items)
+        self.fullname = self.calc_fullname()
 
     def __or__(self, other):
         return Tape(*self.items, other)
 
+    def calc_fullname(self):
+        if len(self) == 0:
+            return "Empty"
+
+        buf = []
+        for item in self.items:
+            text = str(item)
+            if type(item) == Tape:
+                text = "(%s)" % text
+            buf.append(text)
+
+        return " ".join(buf)
+
     def __repr__(self):
-        return " ".join([str(item) for item in self.items])
+        global PRETTY
+        if PRETTY:
+            return pretty(self)
+
+        if self.name:
+            return self.name
+
+        return self.fullname
 
     @classmethod
     def clone(cls, tape):
         items = [item for item in tape.items]
-        return Tape(*items)
+        new_tape = Tape(*items, name=tape.name)
+
+        if hasattr(tape, "step"):
+            new_tape.step = tape.step
+
+        if hasattr(tape, "next_step"):
+            new_tape.next_step = tape.next_step
+
+        return new_tape
+
+    def step_exec(self):
+        self = Tape.clone(self)
+
+        if not hasattr(self, "step"):
+            self.step = None
+
+        if not hasattr(self, "next_step"):
+            self.next_step = None
+
+        self.step = self.next_step
+
+        if self.step is None:
+            if self.name is not None:
+                self.next_step = "expanded"
+                return self
+            else:
+                self.step = "expanded"
+                self.next_step = self.step
+
+        if self.step == "expanded":
+            self.step = "expanded"
+            self.next_step = self.step
+
+        items = []
+        done = False
+
+        for item in self.items:
+            if type(item) == Tape and not done:
+                try:
+                    item = item()
+                    done = True
+                except EOFError:
+                    item = item.pop()
+                    item.step = None
+                    item.next_step = None
+                    done = False
+                    pass
+            items.append(item)
+            self.items = items
+        if done:
+            return self
+
+        f = self.items.pop(0)
+        if not callable(f):
+            return f
+
+        f = f(self)
+
+        if not callable(f):
+            return f
+
+        t = f >> self
+        t.name = self.name
+        t.next_step = self.next_step
+        t.step = self.step
+        return t
 
     def __call__(self):
         from inspect import stack, getmodule
@@ -166,41 +268,26 @@ class Tape():
         mod = getmodule(frm[0]).__name__
 
         if len(self.items) == 0:
-            return self
+            return None
 
-        f = self.items.pop(0)
         if mod != "__main__":
-            if not callable(f):
-                return f
+            return self.step_exec()
 
-            f = f(self)
-
-            if type(f) == Lambda or type(f) == Tape:
-                return f | self
-
-            return f
-
+        f = self
         str_print = None
+
         while True:
             try:
-                f = f(self)
-                if type(f) == tuple:
-                    self.items = list(f)
-                    f = self.items.pop(0)
-                    f = f(self)
-
-                if f.is_end(self):
-                    break
+                f = f.step_exec()
 
                 if str_print is not None:
                     print(str_print)
 
                 PRETTY = True
-                str_print = "%s %s" % (str(f), (str(self)))
+                str_print = str(f)
                 PRETTY = False
 
             except EOFError:
-                print("exception end")
                 break
 
         print()
@@ -294,14 +381,27 @@ class Lambda():
         else:
             return self.fullname
 
+    def __rshift__(self, other):
+        return Tape(self, *other.items)
+
     def __or__(self, other):
-        if type(other) == Tape:
-            return Tape(self, *other.items)
+        temp_name = "%s | %s" % (str(self), str(other))
+
+        from inspect import stack
+        frameinfo = stack()[1]
+        code_context = frameinfo.code_context[0].rstrip()
+        var_name = code_context.split(" = ")[0].rstrip()
+
+
+        if var_name + " = " + temp_name == code_context:
+            name = var_name
+        else:
+            name = None
 
         if type(other) == tuple:
-            return Tape(self, *other)
+            return Tape(self, Tape(*other), name=name)
 
-        return Tape(self, other)
+        return Tape(self, other, name=name)
 
     def is_end(self, tape):
         stack = []
