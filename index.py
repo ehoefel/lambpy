@@ -1,16 +1,16 @@
-from lambdu import Lambda
+from lambpy import Abstraction
 
 
-TRUE = Lambda(lambda x, y: x)
-FALSE = Lambda(lambda x, y: y)
-AND = Lambda(lambda p, q: (p, q, p))
-OR = Lambda(lambda p, q: (p, p, q))
-NOT = Lambda(lambda p: (p, FALSE, TRUE))
-ZERO = Lambda(lambda f, x: x)
-SUCC = Lambda(lambda n, f, x: (f, (n, f, x)))
+TRUE = Abstraction(lambda x, y: x)
+FALSE = Abstraction(lambda x, y: y)
+AND = Abstraction(lambda p, q: (p, q, p))
+OR = Abstraction(lambda p, q: (p, p, q))
+NOT = Abstraction(lambda p: (p, FALSE, TRUE))
+ZERO = Abstraction(lambda f, x: x)
+SUCC = Abstraction(lambda n, f, x: (f, (n, f, x)))
 ONE = SUCC | ZERO
-PLUS = Lambda(lambda m, n: (m, SUCC, n))
-MULT = Lambda(lambda m, n: (m, (PLUS, n), ZERO))
+PLUS = Abstraction(lambda m, n: (m, SUCC, n))
+MULT = Abstraction(lambda m, n: (m, (PLUS, n), ZERO))
 
 print((TRUE | FALSE | TRUE)())
 print((FALSE | TRUE | FALSE)())
