@@ -145,6 +145,7 @@ def pretty_lambda(s):
             return s.calc_fullname()
 
     step = s.step
+    # print("rendering ", step)
 
     if step == "expand":
         old_pretty = PRETTY
@@ -178,6 +179,8 @@ def pretty_lambda(s):
         q = q.replace("(" + v, "(" + Format.CONSUMED(target))
         q = q[1:]
         return q
+    if step == "execute2":
+        return s.calc_fullname()
     if step == "recursion":
         return s.calc_fullname()
 
@@ -303,31 +306,33 @@ class Tape():
             items.append(item)
             self.items = items
         if done_something:
+            # print("Tape done something", self.items)
             return self
         if not has_callable:
             return tuple(self.items)
 
         f = self.pop()
+        # print("Tape pop", f)
 
         if not callable(f):
             return tuple([f, *self.items])
 
         try:
             f = f(self)
-            # print("1got return", f, type(f))
         except EOFError:
-            # print("2got return", f, type(f))
             f = Abstraction.clone(f)
             f.step = None
             f.next_step = None
             return f
+
+        if type(f) == tuple and len(f) == 1:
+            f = f[0]
 
         if type(f) == tuple:
             f = Tape(*f)
             return f
 
         if not callable(f):
-            # print("returning non callable", f, type(f))
             return f
 
         t = f >> self
@@ -346,12 +351,15 @@ class Tape():
         if len(self.items) == 0:
             return None
 
+        # print("Tape(%s)" % (self.items))
         if mod != "__main__":
             res = self.step_exec()
-            # print("3got return", res, type(res))
+            # print("Tape received res", res, type(res))
             return res
 
         f = self
+        previous_print = None
+        count_loop = 0
 
         while True:
             try:
@@ -361,8 +369,18 @@ class Tape():
                 if is_final(f):
                     return f
 
+
                 PRETTY = True
-                print(f)
+                s = str(f)
+                print(s)
+                if s == previous_print:
+                    count_loop += 1
+                    if count_loop >= 10:
+                        print("loop")
+                        exit()
+                else:
+                    count_loop = 0
+                previous_print = s
                 PRETTY = False
 
             except EOFError:
@@ -506,12 +524,15 @@ class Abstraction():
         if hasattr(self, "next_step"):
             self.step = self.next_step
 
+        # print("Abs(%s)[%s]{%s}" % (self.step, self.args, self.body))
+
         if self.step == "recursion" and len(tape) > 0:
             self.step = None
             # exit()
 
         if self.step is None:
             if self.name:
+                # print("%s -> %s" % (self.step, self.next_step))
                 self.next_step = "expand"
             else:
                 if len(tape) == 0:
@@ -521,7 +542,7 @@ class Abstraction():
             return self
 
         if self.step == "expand":
-            self.name = self.fullname
+            self.name = None
             if len(tape) == 0:
                 self.next_step = "recursion"
                 return self
@@ -539,14 +560,25 @@ class Abstraction():
             return self
 
         if self.step == "execute2":
+            # print("  consuming", self.args[0], self.body, self.target)
             res_body = self.f(self.target)
-            # print("execute response", res_body, type(res_body))
+            # print("  execute response", res_body, type(res_body))
             if type(res_body) != tuple:
                 res_body = (res_body,)
-            res_args = self.args[1:]
-            if len(res_args) > 0:
+            self.args = self.args[1:]
+            # print("args left", self.args)
+
+            if len(self.args) == 0:
+                return res_body
+
+            self.next_step = None
+            self.body = res_body
+
+            return self
+
+            if len(self.args) > 0:
                 # print("  returning new Abstraction")
-                return Abstraction.partial(args=res_args, body=res_body)(tape)(tape)
+                return Abstraction.partial(args=self.args, body=res_body)(tape)(tape)
 
             if len(res_body) == 1:
                 # print("  returning single element")
@@ -562,7 +594,7 @@ class Abstraction():
                     raise EOFError
 
                 res = t()
-                # print("4got return", res, type(res))
+                # print("received res", res, type(res))
                 if type(res) != Tape:
                     return res
 
@@ -572,8 +604,6 @@ class Abstraction():
 
             if type(res) == Abstraction:
                 raise EOFError
-                # print(type(res), tape)
-                # exit()
 
             if type(res) != tuple and len(self.args) == 0:
                 return res
@@ -592,9 +622,9 @@ class Abstraction():
         f = self.f
         args = self.args.copy()
         body = deepcopy(self.body)
-        name = self.name
 
-        clone = Abstraction(f, args, body, name)
+        clone = Abstraction(f, args, body)
+        clone.name = self.name
 
         if hasattr(self, "step"):
             clone.step = self.step
