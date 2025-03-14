@@ -565,13 +565,21 @@ class Lambda():
                 # print("4got return", res, type(res))
                 if type(res) != Tape:
                     return res
-                    # raise EOFError
 
                 return tuple(res.items)
 
             res = exec_rec(self.body)
-            if type(res) != tuple:
+
+            if type(res) == Lambda:
+                raise EOFError
+                # print(type(res), tape)
+                # exit()
+
+            if type(res) != tuple and len(self.args) == 0:
                 return res
+
+            if type(res) != tuple:
+                res = (res,)
 
             self.body = res
 
