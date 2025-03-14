@@ -1,6 +1,34 @@
 
 PRETTY = False
 
+KNOWN_NAMES = {}
+
+
+def print_tree(obj):
+    if type(obj) == tuple:
+        return "tuple[%s]" % (", ".join([print_tree(el) for el in obj]))
+    if type(obj) == Tape:
+        return "Tape[%s]" % (", ".join([print_tree(el) for el in obj.items]))
+    if type(obj) == Lambda:
+        body = ", ".join([print_tree(el) for el in obj.body])
+        return "Lambda%s[%s]" % (obj.args, body)
+    return "%s[%s]" % (type(obj), str(obj))
+
+
+def is_final(el):
+    if type(el) == tuple:
+        for el2 in el:
+            if not is_final(el2):
+                return False
+        return True
+    if type(el) == Tape:
+        return is_final(tuple(el.items))
+    if type(el) == Lambda:
+        if not hasattr(el, "step"):
+            return False
+        return el.step == "recursion" and is_final(el.body)
+    return True
+
 
 def get_source(fn):
     from inspect import getsource
@@ -159,9 +187,14 @@ def pretty(s):
 class Tape():
 
     def __init__(self, *items, name=None):
+        global KNOWN_NAMES
         self.name = name
+        if name is not None and name not in KNOWN_NAMES:
+            KNOWN_NAMES[name] = self
 
-        self.items = list(items)
+        items = [Tape(*item) if type(item) == tuple else item for item in items]
+
+        self.items = items
         self.fullname = self.calc_fullname()
 
     def __or__(self, other):
@@ -227,29 +260,49 @@ class Tape():
             self.next_step = self.step
 
         items = []
-        done = False
+        done_something = False
+        has_callable = False
 
         for item in self.items:
-            if type(item) == Tape and not done:
+            has_callable = has_callable | callable(item)
+            if type(item) == Tape and not done_something:
                 try:
-                    item = item()
-                    done = True
+                    new_item = item()
+                    done_something = True
+                    item = new_item
                 except EOFError:
+                    print("got here")
+                    print(self, len(self))
+                    print(print_tree(self))
+                    exit()
                     item = item.pop()
                     item.step = None
                     item.next_step = None
-                    done = False
+                    done_something = False
                     pass
             items.append(item)
             self.items = items
-        if done:
+        if done_something:
             return self
+        if not has_callable:
+            return tuple(self.items)
 
-        f = self.items.pop(0)
+        f = self.pop()
+
         if not callable(f):
+            return tuple([f, *self.items])
+
+        try:
+            f = f(self)
+        except EOFError:
+            f = Lambda.clone(f)
+            f.step = None
+            f.next_step = None
             return f
 
-        f = f(self)
+        if type(f) == tuple:
+            f = Tape(*f)
+            return f
 
         if not callable(f):
             return f
@@ -274,17 +327,15 @@ class Tape():
             return self.step_exec()
 
         f = self
-        str_print = None
 
         while True:
             try:
-                f = f.step_exec()
-
-                if str_print is not None:
-                    print(str_print)
+                f = f()
+                if is_final(f):
+                    return f
 
                 PRETTY = True
-                str_print = str(f)
+                print(f)
                 PRETTY = False
 
             except EOFError:
@@ -294,7 +345,9 @@ class Tape():
         return f
 
     def pop(self):
-        return self.items.pop(0)
+        item = self.items.pop(0)
+        self.fullname = self.calc_fullname()
+        return item
 
     def __len__(self):
         return len(self.items)
@@ -304,12 +357,17 @@ class Lambda():
 
     def __init__(self, f, args=None, body=None, name=None):
         from inspect import signature, stack
+        global KNOWN_NAMES
+
         if name is None:
             frameinfo = stack()[1]
             code_context = frameinfo.code_context[0]
             self.name = code_context.split("Lambda")[0].rstrip(" =")
         else:
             self.name = name
+
+        if self.name is not None and self.name not in KNOWN_NAMES:
+            KNOWN_NAMES[self.name] = self
 
         if args is None:
             args = list(signature(f).parameters)
@@ -318,6 +376,7 @@ class Lambda():
         if body is None:
             body_str = get_source(f).split(": ")[1]
             values = {value: value for index, value in enumerate(self.args)}
+            values = values | KNOWN_NAMES
             body = eval(body_str, values)
             del body_str
             del values
@@ -376,10 +435,7 @@ class Lambda():
         if PRETTY:
             return pretty(self)
 
-        if self.name:
-            return self.name
-        else:
-            return self.fullname
+        return self.fullname
 
     def __rshift__(self, other):
         return Tape(self, *other.items)
@@ -391,7 +447,6 @@ class Lambda():
         frameinfo = stack()[1]
         code_context = frameinfo.code_context[0].rstrip()
         var_name = code_context.split(" = ")[0].rstrip()
-
 
         if var_name + " = " + temp_name == code_context:
             name = var_name
@@ -432,10 +487,12 @@ class Lambda():
         if hasattr(self, "next_step"):
             self.step = self.next_step
 
+        if self.step == "recursion" and len(tape) > 0:
+            self.step = None
+            # exit()
+
         if self.step is None:
             if self.name:
-                if len(tape) == 0:
-                    raise EOFError
                 self.next_step = "expand"
             else:
                 if len(tape) == 0:
@@ -476,18 +533,14 @@ class Lambda():
         if self.step == "recursion":
 
             def exec_rec(body):
-                new_body = []
-                step = False
-                for b in body:
-                    if type(b) == tuple:
-                        b = Tape(*b)()
-                    if callable(b) and not step:
-                        b = b()
-                        step = True
-                    new_body.append(b)
-                if not step:
-                    raise EOFError()
-                return tuple(new_body)
+                t = Tape(*body)
+                if is_final(t):
+                    raise EOFError
+
+                res = t()
+                if type(res) == tuple:
+                    raise EOFError
+                return tuple(res.items)
 
             self.body = exec_rec(self.body)
             self.fullname = self.calc_fullname()
