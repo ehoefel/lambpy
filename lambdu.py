@@ -10,8 +10,9 @@ def print_tree(obj):
     if type(obj) == Tape:
         return "Tape[%s]" % (", ".join([print_tree(el) for el in obj.items]))
     if type(obj) == Lambda:
+        step = obj.step if hasattr(obj, "step") else None
         body = ", ".join([print_tree(el) for el in obj.body])
-        return "Lambda%s[%s]" % (obj.args, body)
+        return "Lambda(%s)%s[%s]" % (step, obj.args, body)
     return "%s[%s]" % (type(obj), str(obj))
 
 
@@ -146,20 +147,37 @@ def pretty_lambda(s):
     step = s.step
 
     if step == "expand":
-        return Format.EXPANDED(s.fullname)
+        old_pretty = PRETTY
+        PRETTY = False
+        fullname = s.calc_fullname()
+        PRETTY = old_pretty
+        return Format.EXPANDED(fullname)
     if step == "prepare":
-        f, v, r = lambda_break(s.fullname)
-        t = Format.CONSUME_IN(f) + r.replace(v, Format.CONSUME_OUT(v))
+        f, v, r = lambda_break(s.calc_fullname())
+        q = r.replace("." + v, "." + Format.CONSUME_OUT(v))
+        q = q.replace(" " + v, " " + Format.CONSUME_OUT(v))
+        t = Format.CONSUME_IN(f) + q
+        old_pretty = PRETTY
         PRETTY = False
         target = str(s.target)
-        PRETTY = True
+        PRETTY = old_pretty
         return t + " " + Format.CONSUME_PARAM(target)
     if step == "execute":
         f, v, r = lambda_break(s.calc_fullname())
+        if len(s.args) == 1 and r[0] == "(":
+            first = str(s.body[0])
+            r = r.replace("(%s)" % first, first)
+        old_pretty = PRETTY
         PRETTY = False
         target = str(s.target)
-        PRETTY = True
-        return r[1:].replace(v, Format.CONSUMED(target))
+        PRETTY = old_pretty
+        if target[0] == "λ":
+            r = r.replace("." + v, ".(%s)" % (v))
+        q = r.replace("." + v, "." + Format.CONSUMED(target))
+        q = q.replace(" " + v, " " + Format.CONSUMED(target))
+        q = q.replace("(" + v, "(" + Format.CONSUMED(target))
+        q = q[1:]
+        return q
     if step == "recursion":
         return s.calc_fullname()
 
@@ -256,18 +274,20 @@ class Tape():
                 self.next_step = self.step
 
         if self.step == "expanded":
-            self.step = "expanded"
             self.next_step = self.step
 
         items = []
         done_something = False
         has_callable = False
 
+        # print(print_tree(self))
+
         for item in self.items:
             has_callable = has_callable | callable(item)
             if type(item) == Tape and not done_something:
                 try:
                     new_item = item()
+                    # print("got return", new_item, type(new_item))
                     done_something = True
                     item = new_item
                 except EOFError:
@@ -294,7 +314,9 @@ class Tape():
 
         try:
             f = f(self)
+            # print("1got return", f, type(f))
         except EOFError:
+            # print("2got return", f, type(f))
             f = Lambda.clone(f)
             f.step = None
             f.next_step = None
@@ -305,6 +327,7 @@ class Tape():
             return f
 
         if not callable(f):
+            # print("returning non callable", f, type(f))
             return f
 
         t = f >> self
@@ -324,13 +347,17 @@ class Tape():
             return None
 
         if mod != "__main__":
-            return self.step_exec()
+            res = self.step_exec()
+            # print("3got return", res, type(res))
+            return res
 
         f = self
 
         while True:
             try:
                 f = f()
+                if type(f) == Lambda:
+                    return f
                 if is_final(f):
                     return f
 
@@ -387,11 +414,20 @@ class Lambda():
         self.make_function()
 
     def calc_fullname(self):
-        def rec(items):
+
+        def rec(items, args=0):
+            global PRETTY
             res = []
             if type(items) == str:
                 return items
             for item in items:
+                old_pretty = PRETTY
+                PRETTY = False
+                s2 = str(item)
+                PRETTY = old_pretty
+                if item == items[0] and args > 0 and s2[0] == "λ":
+                    item = "(" + str(item) + ")"
+
                 s = str(item)
                 if type(item) == tuple:
                     s = "(%s)" % rec(item)
@@ -400,7 +436,7 @@ class Lambda():
                 res.append(s)
             return " ".join(res)
 
-        s_body = rec(self.body)
+        s_body = rec(self.body, len(self.args))
 
         return "".join(["λ%s." % arg for arg in self.args]) + s_body
 
@@ -435,6 +471,9 @@ class Lambda():
         if PRETTY:
             return pretty(self)
 
+        if self.name:
+            return self.name
+
         return self.fullname
 
     def __rshift__(self, other):
@@ -454,29 +493,9 @@ class Lambda():
             name = None
 
         if type(other) == tuple:
-            return Tape(self, Tape(*other), name=name)
+            return Tape(Lambda.clone(self), Tape(*other), name=name)
 
-        return Tape(self, other, name=name)
-
-    def is_end(self, tape):
-        stack = []
-        tape = Tape.clone(tape)
-        el = self
-
-        def same(a, b):
-            if type(a) != type(b):
-                return False
-            if str(a) != str(b):
-                return False
-            return True
-
-        while same(self, el):
-            try:
-                el = el(tape)
-                stack.append(el)
-            except EOFError:
-                return True
-        return False
+        return Tape(Lambda.clone(self), other, name=name)
 
     def __call__(self, tape):
         self = Lambda.clone(self)
@@ -502,6 +521,7 @@ class Lambda():
             return self
 
         if self.step == "expand":
+            self.name = self.fullname
             if len(tape) == 0:
                 self.next_step = "recursion"
                 return self
@@ -520,14 +540,18 @@ class Lambda():
 
         if self.step == "execute2":
             res_body = self.f(self.target)
+            # print("execute response", res_body, type(res_body))
             if type(res_body) != tuple:
                 res_body = (res_body,)
             res_args = self.args[1:]
             if len(res_args) > 0:
+                # print("  returning new Lambda")
                 return Lambda.partial(args=res_args, body=res_body)(tape)(tape)
 
             if len(res_body) == 1:
+                # print("  returning single element")
                 res_body = res_body[0]
+
             return res_body
 
         if self.step == "recursion":
@@ -538,11 +562,19 @@ class Lambda():
                     raise EOFError
 
                 res = t()
-                if type(res) == tuple:
-                    raise EOFError
+                # print("4got return", res, type(res))
+                if type(res) != Tape:
+                    return res
+                    # raise EOFError
+
                 return tuple(res.items)
 
-            self.body = exec_rec(self.body)
+            res = exec_rec(self.body)
+            if type(res) != tuple:
+                return res
+
+            self.body = res
+
             self.fullname = self.calc_fullname()
             return self
 

@@ -12,8 +12,9 @@ ONE = SUCC | ZERO
 PLUS = Lambda(lambda m, n: (m, SUCC, n))
 MULT = Lambda(lambda m, n: (m, (PLUS, n), ZERO))
 
+print((MULT | ONE | ONE)())
 # print((SUCC | ZERO)())
 # print((SUCC | ONE)())
-print((MULT | ONE | ONE)())
+#print((MULT | ONE | ONE)())
 # print((AND | TRUE | FALSE)())
 
