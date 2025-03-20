@@ -3,6 +3,8 @@ exec_chain = []
 last_exec = None
 DONE = "done"
 
+from expression import to_str
+
 
 def exec_next(exp):
     global exec_chain, last_exec
@@ -37,7 +39,7 @@ def print_chain(exp):
     get_final(exp)
     for step in exec_chain:
         if step != DONE:
-            print(step)
+            print(to_str(step))
 
 
 if __name__ == "__main__":
@@ -63,7 +65,7 @@ if __name__ == "__main__":
     rule("1st", "λp.p TRUE")
     rule("2nd", "λp.p FALSE")
 
-    exp = parse("2nd (PAIR 2 1)")
+    exp = parse("SUB (SUCC (SUCC 2)) 2")
 
     # print(get_final(exp))
     print_chain(exp)

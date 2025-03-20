@@ -2,6 +2,7 @@
 import ply.lex as lex
 import ply.yacc as yacc
 from expression import Grouping, Variable, Abstraction, Application, Rule
+from expression import bind
 
 tokens = (
     'VAR',
@@ -97,7 +98,8 @@ rules = []
 def parse(exp_str):
     exp = parser.parse(exp_str)
     for rule in rules:
-        exp.bind(rule)
+        bind(exp, rule)
+        # exp.bind(rule)
 
     return exp
 
