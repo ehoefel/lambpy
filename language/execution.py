@@ -1,9 +1,9 @@
+from aux_functions import to_str, call
 
 exec_chain = []
 last_exec = None
 DONE = "done"
 
-from expression import to_str
 
 
 def exec_next(exp):
@@ -17,7 +17,7 @@ def exec_next(exp):
     if last_exec == DONE:
         return None
 
-    res = last_exec()
+    res = call(last_exec)
     if last_exec == res:
         res = DONE
         exec_chain.append(res)
@@ -68,6 +68,8 @@ if __name__ == "__main__":
     exp = parse("SUB (SUCC (SUCC 2)) 2")
 
     # print(get_final(exp))
+    print_chain(exp)
+    exp = parse("POWER 2 1")
     print_chain(exp)
     # import code
     # code.interact(local=locals())

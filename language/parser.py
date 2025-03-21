@@ -99,7 +99,6 @@ def parse(exp_str):
     exp = parser.parse(exp_str)
     for rule in rules:
         bind(exp, rule)
-        # exp.bind(rule)
 
     return exp
 
