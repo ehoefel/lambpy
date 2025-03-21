@@ -1,8 +1,8 @@
 
 import ply.lex as lex
 import ply.yacc as yacc
-from expression import Grouping, Variable, Abstraction, Application, Rule
-from expression import bind
+from language.expression import Grouping, Variable, Abstraction, Application, Rule
+from language.expression import bind
 
 tokens = (
     'VAR',

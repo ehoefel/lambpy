@@ -1,6 +1,18 @@
-from expression import Expression, Grouping, Application, Abstraction
-from expression import Variable, Rule, Value
-from expression import min_exp, bind
+from language.expression import Expression, Grouping, Application, Abstraction
+from language.expression import Variable, Rule, Value
+from language.expression import min_exp, bind
+
+
+def depth_first(exp, fn):
+    if not isinstance(exp, Expression):
+        return fn(exp, [])
+
+    children = get_children(exp)
+    acc = []
+    for child in children:
+        acc.append(depth_first(child, fn))
+
+    return fn(exp, acc)
 
 
 def get_children(exp):
@@ -17,6 +29,30 @@ def apply_exp_rec(exp, condition_fn, operation):
     children = get_children(exp)
     for child in children:
         apply_exp_rec(child, condition_fn, operation)
+
+
+def next_exec(exp):
+    if not isinstance(exp, Expression):
+        return []
+    if type(exp) == Variable:
+        return []
+    if type(exp) in [Expression, Abstraction, Grouping]:
+        nexp = next_exec(exp.expression)
+        if len(nexp) > 0:
+            return nexp + [exp]
+        return []
+    if type(exp) == Rule:
+        return [exp]
+    if type(exp) == Application:
+        if type(exp.exp1) == Abstraction:
+            return [exp.exp1, exp.exp1.variable, exp]
+        nexp1 = next_exec(exp.exp1)
+        if len(nexp1) > 0:
+            return nexp1 + [exp]
+        nexp2 = next_exec(exp.exp2)
+        if len(nexp2) > 0:
+            return nexp2 + [exp]
+        return []
 
 
 def priority(exp, can_consume=False):

@@ -94,6 +94,9 @@ class Rule(Variable):
         super().__init__(symbol)
         self.expression = min_exp(expression)
 
+    def __eq__(self, other):
+        return type(other) == Rule and self.binding == other.binding
+
 
 class Value(Expression):
 

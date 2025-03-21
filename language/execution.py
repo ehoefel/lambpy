@@ -5,7 +5,6 @@ last_exec = None
 DONE = "done"
 
 
-
 def exec_next(exp):
     global exec_chain, last_exec
     if len(exec_chain) == 0 or exec_chain[0] != exp:
@@ -67,9 +66,4 @@ if __name__ == "__main__":
 
     exp = parse("SUB (SUCC (SUCC 2)) 2")
 
-    # print(get_final(exp))
-    print_chain(exp)
-    exp = parse("POWER 2 1")
-    print_chain(exp)
-    # import code
-    # code.interact(local=locals())
+    #print_chain(exp)
