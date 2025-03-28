@@ -11,16 +11,22 @@ from render.elements.button import Button
 from render.elements.static_text import StaticText
 from render.elements.list import List
 from render.elements.log import Log
+from language.execution import Execution
+from language.aux_functions import to_str
+
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename="log.txt", level=logging.DEBUG)
 
 
 def my_exit():
+    logger.debug("my_exit called")
     term_any_key()
     exit()
 
 
 input_functions = {
     4: lambda: my_exit(),
-    10: lambda: my_exit()  # ENTER
 }
 
 cursor_map = {
@@ -45,7 +51,10 @@ cursor_map = {
     },
     "next": {
         "up": "input",
-        "right": "save"
+        "right": "save",
+        "disabled": {
+            "down": "save"
+        }
     },
     "save": {
         "up": "input",
@@ -57,7 +66,25 @@ cursor_map = {
 class Next(Button):
 
     def __init__(self):
-        super().__init__("Next Step", "white")
+        super().__init__("Next Step", "white", disabled_style="dim grey37")
+
+        def on_enter():
+            global curr_execution
+            logger.debug("calling next execution")
+            res = curr_execution()
+            logger.debug("returned: " + str(res))
+            if not self.is_enabled():
+                body.set_focus("save")
+
+
+        input_functions = {
+            10: on_enter
+        }
+        self.add_input_functions(input_functions)
+
+    def is_enabled(self):
+        global curr_execution
+        return curr_execution is not None and not curr_execution.is_complete()
 
 
 class Help(Button):
@@ -84,6 +111,31 @@ class Start(Button):
         super().__init__("Start", "yellow")
 
 
+class ExecutionLog(Log):
+
+    def __init__(self):
+        super().__init__()
+        self.execution = None
+
+    def set_execution(self, execution):
+        self.execution = execution
+        self.entries = []
+
+    def __rich_console__(self, console, options):
+        entries = []
+        if self.execution is not None:
+            for step in self.execution.steps:
+                entries.append((to_str(step), "b"))
+        self.entries = entries
+        return super().__rich_console__(console, options)
+        self.entries = []
+
+
+curr_execution = None
+execution_log = ExecutionLog()
+body = Body()
+
+
 class DerivationInput(Input):
 
     def __init__(self):
@@ -94,6 +146,19 @@ class DerivationInput(Input):
 
         super().__init__(placeholder="(λx.x) a", parser=parser)
 
+        def on_enter():
+            global curr_execution, execution_log, body
+            curr_execution = Execution(self.value)
+            execution_log.set_execution(curr_execution)
+
+            body.set_focus("next")
+            self.clear()
+            return True
+
+        input_functions = {
+            10: on_enter
+        }
+        self.add_input_functions(input_functions)
 
 
 def update():
@@ -103,7 +168,6 @@ def update():
 
 if __name__ == "__main__":
     input_reader = InputReader()
-    body = Body()
     body.add_input_functions(input_functions)
     body.set_focus_map(cursor_map)
 
@@ -122,14 +186,7 @@ if __name__ == "__main__":
     logo = StaticText("[bold green]λ[/]")
     body.add("logo", logo)
     body.add("footer_middle", StaticText(""))
-    log = Log()
-    log.log("SUCC ZERO", "δ")
-    log.log("(λn.λf.λx.f (n f x)) ZERO", "β")
-    log.log("λf.λx.f (ZERO f x)", "δ")
-    log.log("λf.λx.f ((λf.λx.x) f x)", "β")
-    log.log("λf.λx.f ((λx.x) x)", "β")
-    log.log("λf.λx.f x")
-    body.add("output", log)
+    body.add("output", execution_log)
 
     body.focus = "input"
 

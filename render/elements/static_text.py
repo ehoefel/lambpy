@@ -10,5 +10,5 @@ class StaticText(Window):
         self.text = text
         self.style = style
 
-    def render(self, focused):
+    def render(self):
         return Panel(self.text, style=self.style, box=box.SIMPLE_HEAD)

@@ -1,6 +1,9 @@
 from language.expression import Expression, Grouping, Application, Abstraction
 from language.expression import Variable, Rule, Value
 from language.expression import min_exp, bind
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def depth_first(exp, fn):
@@ -107,6 +110,9 @@ def to_str(exp):
         Grouping: lambda x: "(%s)" % (to_str(exp.expression)),
     }
 
+    if type(exp) not in map.keys():
+        return exp
+
     return map[type(exp)](exp)
 
 
@@ -206,16 +212,22 @@ def expression_call(exp, target=None):
     return c
 
 
+def debug_repr(exp):
+    return "%s - %s" % (type(exp).__name__, to_str(exp))
+
+
 def call(exp, target=None):
     map = {
         Application: application_call,
         Abstraction: abstraction_call,
         Rule: lambda x, y: Value(x, x.expression),
+        Expression: expression_call
     }
     key = type(exp)
     if key in map.keys():
         return map[key](exp, target)
-    return expression_call(exp, target)
+
+    return exp
 
 
 def rename(exp, new_symbol):
@@ -242,6 +254,11 @@ def beta_apply(exp, value):
 
     if exp.expression == value.variable:
         c.expression = clone(value.expression)
+        if type(c) == Expression:
+            c = c.expression
     elif not isinstance(exp.expression, Variable):
         c.expression = beta_apply(c.expression, value)
+        if isinstance(c, Abstraction):
+            if isinstance(c.expression, Grouping):
+                c.expression = c.expression.expression
     return c

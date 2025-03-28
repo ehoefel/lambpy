@@ -1,8 +1,8 @@
 
 import ply.lex as lex
 import ply.yacc as yacc
-from language.expression import Grouping, Variable, Abstraction, Application, Rule
-from language.expression import bind
+from language.expression import Grouping, Variable, Abstraction
+from language.expression import Application, Rule, bind
 
 tokens = (
     'VAR',
@@ -34,14 +34,6 @@ def p_abstraction(p):
         exit()
 
     p[0] = Abstraction(p[2][0], p[4])
-
-#     ab = None
-#     for el in reversed(p[2]):
-#         if ab is None:
-#             ab = Abstraction(el, p[4])
-#         else:
-#             ab = Abstraction(el, el)
-#     p[0] = ab
 
 
 def p_variable_list(p):
@@ -90,13 +82,13 @@ def p_error(p):
 
 
 lexer = lex.lex(optimize=1, debug=False)
-parser = yacc.yacc(optimize=1)
+parser = yacc.yacc(optimize=1, debug=True)
 
 rules = []
 
 
 def parse(exp_str):
-    exp = parser.parse(exp_str)
+    exp = parser.parse(exp_str, debug=True)
     for rule in rules:
         bind(exp, rule)
 
@@ -107,13 +99,3 @@ def rule(name, exp_str):
     rule = Rule(name, parse(exp_str))
     rules.append(rule)
     return rule
-
-
-if __name__ == "__main__":
-
-    rule("SUCC", "λn.λf.λx.f(n f x)")
-    rule("0", "λf.λx.x")
-    rule("PLUS", "λm.λn.m SUCC n")
-    exp = parse("PLUS (SUCC 0) (SUCC 0)")
-    import code
-    code.interact(local=locals())

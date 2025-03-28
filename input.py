@@ -1,8 +1,10 @@
 import atexit, termios
 import sys, os
 import time
+import logging
 
 old_settings = None
+logger = logging.getLogger(__name__)
 
 
 def init_any_key():
@@ -36,6 +38,7 @@ screen."""
         text = ""
         ch = os.read(sys.stdin.fileno(), 1).decode("utf-8")
         while len(ch) > 0:
+            logger.debug("%s - %s" % (repr(ch), ord(ch)))
             self.fn(ch)
             ch = os.read(sys.stdin.fileno(), 1).decode("utf-8")
 

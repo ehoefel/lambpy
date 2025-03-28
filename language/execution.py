@@ -1,48 +1,46 @@
-from aux_functions import to_str, call
+from language.aux_functions import call
+from language.parser import rule, parse
 
 exec_chain = []
 last_exec = None
 DONE = "done"
 
 
-def exec_next(exp):
-    global exec_chain, last_exec
-    if len(exec_chain) == 0 or exec_chain[0] != exp:
-        exec_chain.clear()
-        last_exec = exp
-        exec_chain.append(exp)
-        return exp
+class Execution():
 
-    if last_exec == DONE:
-        return None
+    def __init__(self, exp):
+        self.first_exp = parse(exp)
+        self.steps = [self.first_exp]
+        self.last_exec = self.first_exp
+        self.complete_exec_cache = None
 
-    res = call(last_exec)
-    if last_exec == res:
-        res = DONE
-        exec_chain.append(res)
-        return None
+    def is_complete(self):
+        if self.complete_exec_cache is not None:
+            return self.complete_exec_cache
+        res = call(self.last_exec)
+        self.complete_exec_cache = self.last_exec == res
+        self.next_exec_cache = res
+        return self.complete_exec_cache
 
-    exec_chain.append(res)
-    last_exec = res
-    return res
+    def __repr__(self):
+        return str(self.last_exec)
 
+    def __call__(self):
+        if self.is_complete():
+            return False
 
-def get_final(exp):
-    _ = exec_next(exp)
-    while exec_chain[-1] != DONE:
-        exec_next(exp)
-    return exec_chain[-2]
+        res = self.next_exec_cache
+        self.steps.append(res)
+        self.last_exec = res
+        self.next_exec_cache = None
+        self.complete_exec_cache = None
+        return True
 
-
-def print_chain(exp):
-    get_final(exp)
-    for step in exec_chain:
-        if step != DONE:
-            print(to_str(step))
+    def get_result(self):
+        return self.last_exec
 
 
 if __name__ == "__main__":
-    from parser import rule, parse
 
     rule("TRUE", "λx.λy.x")
     rule("FALSE", "λx.λy.y")

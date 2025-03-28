@@ -14,11 +14,18 @@ class Input(Window):
         self.cursor = 0
         self.style = ""
         # self.input_functions[27] = lambda: False
-        self.input_functions[67] = lambda: self.move_cursor(1)
-        self.input_functions[68] = lambda: self.move_cursor(-1)
-        self.input_functions[91] = lambda: False
-        self.input_functions[126] = lambda: self.delete()
-        self.input_functions[127] = lambda: self.backspace()
+        input_functions = {
+            67: lambda: self.move_cursor(1),
+            68: lambda: self.move_cursor(-1),
+            91: lambda: False,
+            126: lambda: self.delete(),
+            127: lambda: self.backspace()
+        }
+        self.add_input_functions(input_functions)
+
+    def clear(self):
+        self.value = ""
+        self.cursor = 0
 
     def delete(self):
         if len(self.value) == 0:
@@ -80,11 +87,11 @@ class Input(Window):
         self.cursor += 1
         return True
 
-    def render(self, focused):
+    def render(self):
 
         style = self.style
         padding = (0, 1)
-        if not focused:
+        if not self.is_active():
             style += " dim"
 
         text = self.value
@@ -94,11 +101,11 @@ class Input(Window):
 
         cursor_style = Style(dim=True, italic=True, color="green")
         if text_empty:
-            if focused:
+            if self.is_active():
                 cursor_str = Text("🮇", style=cursor_style)
                 text = Text.assemble(cursor_str, text)
                 padding = (0, 0)
-        elif focused:
+        elif self.is_active():
             text_before = text[:self.cursor]
             text_after = text[self.cursor:]
             if self.cursor == len(text):
