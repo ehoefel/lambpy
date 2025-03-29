@@ -1,0 +1,99 @@
+Screen {
+  height: 100%;
+  layout: grid;
+  grid-size: 1;
+}
+
+#header {
+  dock: top;
+  height: 5;
+  width: 100%;
+  layout: grid;
+  grid-size: 5;
+  padding: 1 1;
+  grid-columns: auto auto 1fr auto auto;
+  grid-gutter: 1;
+}
+
+#logo {
+  width: 1;
+  color: green;
+  text-style: bold;
+  margin-top: 1;
+}
+
+#title {
+  margin-top: 1;
+  height: 1;
+  text-style: bold;
+}
+
+#subtitle {
+  margin-top: 1;
+  height: 1;
+  color: gray;
+}
+
+#info {
+  min-width: 10;
+}
+
+#help {
+  min-width: 10;
+}
+
+#body {
+  layout: grid;
+  grid-size: 2;
+  grid-columns: 1fr auto;
+  grid-gutter: 1;
+  margin-bottom: 1;
+}
+
+#body2 {
+  layout: grid;
+  grid-size: 1;
+}
+
+#input_area {
+  dock: top;
+  height: 4;
+  width: 100%;
+  layout: grid;
+  grid-size: 2;
+  grid-columns: 1fr auto;
+  grid-gutter: 1;
+}
+
+#run {
+  dock: right;
+  min-width: 7;
+}
+
+#footer {
+  padding-top: 1;
+  dock: bottom;
+  height: 4;
+  width: 100%;
+  layout: grid;
+  grid-size: 2;
+  grid-columns: auto auto;
+  grid-gutter: 1;
+}
+
+#next {
+  dock: left;
+  min-width: 8;
+}
+
+#save {
+  dock: right;
+  min-width: 8;
+}
+
+#rules {
+  dock: right;
+  width: 30;
+  height: 100%;
+}
+
