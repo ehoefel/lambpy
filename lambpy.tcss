@@ -70,6 +70,14 @@ Screen {
   min-width: 7;
 }
 
+#reduction_steps {
+  padding: 1;
+}
+
+#reduction_steps ListItem {
+  margin-bottom: 1;
+}
+
 #footer {
   padding-top: 1;
   dock: bottom;

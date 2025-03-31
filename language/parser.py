@@ -82,15 +82,19 @@ def p_error(p):
 
 
 lexer = lex.lex(optimize=1, debug=False)
-parser = yacc.yacc(optimize=1, debug=True)
+parser = yacc.yacc(optimize=1, debug=False)
 
 rules = []
 
 
 def parse(exp_str):
-    exp = parser.parse(exp_str, debug=True)
+    exp = parser.parse(exp_str, debug=False)
+    if exp is None:
+        return None
     for rule in rules:
         bind(exp, rule)
+    if type(exp) == Variable:
+        return None
 
     return exp
 
