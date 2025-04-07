@@ -3,20 +3,26 @@
 # ∵
 # λ
 
-from language.execution import Execution
 from language.parser import parse
-from language.aux_functions import to_str
+from language.execution import Execution
 
 from textual.app import App
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Static, Button, ListView
+from textual.widgets import Static, Button
 from elements.input_field import InputField
 from elements.reduction_steps import ReductionSteps
 from elements.run_button import Run
+from elements.next_button import Next
+from elements.rules import RuleList
+from language.rules import LambdaRules
 
 import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename="log.txt", level=logging.DEBUG)
+
+rules = LambdaRules()
+rules.add("TRUE", "λx.λy.x")
+rules.add("FALSE", "λx.λy.y")
 
 
 class Lambpy(App):
@@ -41,37 +47,45 @@ class Lambpy(App):
                 ),
                 ReductionSteps(id="reduction_steps"),
                 Horizontal(
-                    Button("Next", variant="primary", id="next"),
+                    Next("Next", variant="primary", id="next"),
                     Button("Save", variant="warning", id="save"),
                     id="footer"
                 ),
                 id="body2"
             ),
-            ListView(id="rules"),
+            RuleList(rules=rules),
             id="body"
         )
 
     def on_mount(self):
         run = app.get_widget_by_id("run")
         run.disabled = True
+        next = app.get_widget_by_id("next")
+        next.disabled = True
 
     def on_lambda_exec(self, event):
         input = app.get_widget_by_id("input")
         reduction_steps = app.get_widget_by_id("reduction_steps")
-        reduction_steps.add_step(input.value)
+        execution = Execution(input.value)
+        reduction_steps.start(execution)
         input.clear()
         next = app.get_widget_by_id("next")
+        next.disabled = False
         app.set_focus(next)
+
+    def on_lambda_next(self, event):
+        reduction_steps = app.get_widget_by_id("reduction_steps")
+        reduction_steps.next_step()
+        next = app.get_widget_by_id("next")
+        next.disabled = reduction_steps.is_complete()
 
     def on_input_changed(self, event):
         input = event.input
         value = input.value
-        el = parse(value)
+        el = parse(value, rule_list=rules)
         invalid = el is None
-        print(el, type(el), invalid)
         run = app.get_widget_by_id("run")
         run.disabled = invalid
-
 
 
 if __name__ == "__main__":

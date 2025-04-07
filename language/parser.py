@@ -2,7 +2,7 @@
 import ply.lex as lex
 import ply.yacc as yacc
 from language.expression import Grouping, Variable, Abstraction
-from language.expression import Application, Rule, bind
+from language.expression import Application, Rule
 
 tokens = (
     'VAR',
@@ -84,22 +84,14 @@ def p_error(p):
 lexer = lex.lex(optimize=1, debug=False)
 parser = yacc.yacc(optimize=1, debug=False)
 
-rules = []
 
-
-def parse(exp_str):
+def parse(exp_str, rule_list=None):
     exp = parser.parse(exp_str, debug=False)
     if exp is None:
         return None
-    for rule in rules:
-        bind(exp, rule)
+    if rule_list is not None:
+        rule_list.apply(exp)
     if type(exp) == Variable:
         return None
 
     return exp
-
-
-def rule(name, exp_str):
-    rule = Rule(name, parse(exp_str))
-    rules.append(rule)
-    return rule

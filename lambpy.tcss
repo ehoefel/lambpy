@@ -78,6 +78,26 @@ Screen {
   margin-bottom: 1;
 }
 
+#rules Label {
+  border-top: tall $surface-lighten-1;
+  text-align: center;
+  width: 100%;
+  background: ansi_black;
+  border-bottom: heavy $surface-darken-1;
+}
+
+#rules Rule {
+  width: 100%;
+  text-align: left;
+  height: 2;
+  color: $button-foreground;
+  background: $surface;
+  border: none;
+  outline-bottom: heavy gray;
+  padding-left: 1;
+  text-style: italic;
+}
+
 #footer {
   padding-top: 1;
   dock: bottom;
