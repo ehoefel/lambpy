@@ -5,6 +5,7 @@
 
 from language.parser import parse
 from language.execution import Execution
+from language.aux_functions import to_str
 
 from textual.app import App
 from textual.containers import Horizontal, Vertical
@@ -15,7 +16,7 @@ from elements.run_button import Run
 from elements.next_button import Next
 from elements.save_button import Save
 from elements.rules import RuleList
-from elements.modal import Modal
+from elements.modal import SaveModal
 from language.rules import LambdaRules
 
 rules = LambdaRules()
@@ -56,12 +57,16 @@ class Lambpy(App):
         )
 
     def on_mount(self):
+        if self.screen != self.default_screen:
+            return
         run = app.get_widget_by_id("run")
         run.disabled = True
         next = app.get_widget_by_id("next")
         next.disabled = True
 
     def on_lambda_exec(self, event):
+        if self.screen != self.default_screen:
+            return
         run = app.get_widget_by_id("run")
         if run.disabled:
             return
@@ -78,18 +83,23 @@ class Lambpy(App):
         next.disabled = reduction_steps.is_complete()
 
     def on_lambda_next(self, event):
+        if self.screen != self.default_screen:
+            return
         reduction_steps = app.get_widget_by_id("reduction_steps")
         reduction_steps.next_step()
         next = app.get_widget_by_id("next")
         next.disabled = reduction_steps.is_complete()
 
     def on_lambda_save(self, event):
+        if self.screen != self.default_screen:
+            return
         reduction_steps = app.get_widget_by_id("reduction_steps")
         el = reduction_steps.get_last_step()
-        from textual.widgets import Label
-        self.push_screen(Modal(Label(el)))
+        self.push_screen(SaveModal(to_str(el)))
 
     def on_input_changed(self, event):
+        if self.screen != self.default_screen:
+            return
         input = event.input
         value = input.value
         el = parse(value, rule_list=rules)
