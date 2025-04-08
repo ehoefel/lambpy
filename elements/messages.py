@@ -7,3 +7,11 @@ class LambdaExec(Message):
 
 class LambdaNext(Message):
     pass
+
+
+class LambdaSave(Message):
+    pass
+
+
+class ModalClose(Message):
+    pass

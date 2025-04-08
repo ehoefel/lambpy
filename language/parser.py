@@ -21,18 +21,11 @@ t_ignore = ' \r\n'
 
 
 def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
-    exit()
+    pass
 
 
 def p_abstraction(p):
     'expression : LAMBDA variable-list DOT expression'
-
-    if len(p[2]) > 1:
-        print("abstraction with multiple variables")
-        print(p[2])
-        exit()
-
     p[0] = Abstraction(p[2][0], p[4])
 
 
@@ -77,8 +70,7 @@ def p_variable2(p):
 
 
 def p_error(p):
-    print("Syntax error in input!")
-    print(p)
+    pass
 
 
 lexer = lex.lex(optimize=1, debug=False)

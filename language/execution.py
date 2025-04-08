@@ -1,5 +1,6 @@
 from language.aux_functions import call, to_str
 from language.parser import parse
+from language.expression import Rule
 
 exec_chain = []
 last_exec = None
@@ -9,7 +10,7 @@ DONE = "done"
 class Execution():
 
     def __init__(self, exp):
-        self.first_exp = parse(exp)
+        self.first_exp = exp
         self.steps = [self.first_exp]
         self.last_exec = self.first_exp
         self.complete_exec_cache = None
@@ -19,6 +20,7 @@ class Execution():
             return self.complete_exec_cache
         res = call(self.last_exec)
         self.complete_exec_cache = self.last_exec == res
+        self.complete_exec_cache |= type(self.last_exec) == Rule
         self.next_exec_cache = res
         return self.complete_exec_cache
 

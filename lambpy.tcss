@@ -125,3 +125,9 @@ Screen {
   height: 100%;
 }
 
+Modal {
+  align: center middle;
+  height: 1;
+  width: 20;
+  background: transparent;
+}

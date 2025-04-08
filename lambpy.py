@@ -13,12 +13,10 @@ from elements.input_field import InputField
 from elements.reduction_steps import ReductionSteps
 from elements.run_button import Run
 from elements.next_button import Next
+from elements.save_button import Save
 from elements.rules import RuleList
+from elements.modal import Modal
 from language.rules import LambdaRules
-
-import logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename="log.txt", level=logging.DEBUG)
 
 rules = LambdaRules()
 rules.add("TRUE", "λx.λy.x")
@@ -48,7 +46,7 @@ class Lambpy(App):
                 ReductionSteps(id="reduction_steps"),
                 Horizontal(
                     Next("Next", variant="primary", id="next"),
-                    Button("Save", variant="warning", id="save"),
+                    Save("Save", variant="warning", id="save"),
                     id="footer"
                 ),
                 id="body2"
@@ -64,20 +62,32 @@ class Lambpy(App):
         next.disabled = True
 
     def on_lambda_exec(self, event):
+        run = app.get_widget_by_id("run")
+        if run.disabled:
+            return
+
         input = app.get_widget_by_id("input")
         reduction_steps = app.get_widget_by_id("reduction_steps")
-        execution = Execution(input.value)
+        exp = parse(input.value, rule_list=rules)
+        execution = Execution(exp)
         reduction_steps.start(execution)
         input.clear()
         next = app.get_widget_by_id("next")
         next.disabled = False
         app.set_focus(next)
+        next.disabled = reduction_steps.is_complete()
 
     def on_lambda_next(self, event):
         reduction_steps = app.get_widget_by_id("reduction_steps")
         reduction_steps.next_step()
         next = app.get_widget_by_id("next")
         next.disabled = reduction_steps.is_complete()
+
+    def on_lambda_save(self, event):
+        reduction_steps = app.get_widget_by_id("reduction_steps")
+        el = reduction_steps.get_last_step()
+        from textual.widgets import Label
+        self.push_screen(Modal(Label(el)))
 
     def on_input_changed(self, event):
         input = event.input

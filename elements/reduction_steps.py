@@ -18,3 +18,6 @@ class ReductionSteps(ListView):
         if not hasattr(self, "execution"):
             return True
         return self.execution.is_complete()
+
+    def get_last_step(self):
+        return str(self.execution)

@@ -213,7 +213,28 @@ def expression_call(exp, target=None):
 
 
 def debug_repr(exp):
-    return "%s - %s" % (type(exp).__name__, to_str(exp))
+    def abstraction_str(x):
+        return "<Abs[%s].%s>" % (to_str(x.variable), debug_repr(x.expression))
+
+    def application_str(x):
+        repr1 = debug_repr(x.exp1)
+
+        return "<App [%s] [%s]>" % (repr1, debug_repr(x.exp2))
+
+    map = {
+        Expression: lambda x: "<Exp [%s]>" % (debug_repr(x.expression)),
+        Value: lambda x: "<Value [%s]>" % (debug_repr(x.expression)),
+        Rule: lambda x: "<Rule [%s] [%s]>" % (str(x.symbol), to_str(x.expression)),
+        Variable: lambda x: "<Var [%s]>" % (str(x.symbol)),
+        Abstraction: abstraction_str,
+        Application: application_str,
+        Grouping: lambda x: "<Group [%s]>" % (debug_repr(exp.expression)),
+    }
+
+    if type(exp) not in map.keys():
+        return exp
+
+    return map[type(exp)](exp)
 
 
 def call(exp, target=None):
