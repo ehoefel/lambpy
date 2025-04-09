@@ -55,6 +55,10 @@ Screen {
   grid-size: 1;
 }
 
+Input.-valid {
+  border: tall $success 60%;
+}
+
 #input_area {
   dock: top;
   height: 4;
@@ -157,10 +161,17 @@ Form Grid Label {
   text-style: bold;
 }
 
-Form Grid InputField {
+Form Grid Input {
   border-top: tall $surface-lighten-1;
   border-bottom: tall $surface-darken-1;
   border-left: none;
   border-right: none;
   margin-right: 1;
+}
+
+Form .right_button {
+  height: 4;
+  align: right bottom;
+  padding-right: 1;
+
 }

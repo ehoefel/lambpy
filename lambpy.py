@@ -20,13 +20,11 @@ from elements.modal import SaveModal
 from language.rules import LambdaRules
 
 rules = LambdaRules()
-rules.add("TRUE", "λx.λy.x")
-rules.add("FALSE", "λx.λy.y")
 
 
 class Lambpy(App):
     CSS_PATH = "lambpy.tcss"
-    AUTO_FOCUS = "#input"
+    AUTO_FOCUS = "#input_exp_run"
 
     def compose(self):
         yield Horizontal(
@@ -40,7 +38,7 @@ class Lambpy(App):
         yield Horizontal(
             Vertical(
                 Horizontal(
-                    InputField(placeholder="(λx.x) a", id="input"),
+                    InputField(placeholder="(λx.x) a", id="input_exp_run"),
                     Run("Run", variant="error", id="run"),
                     id="input_area"
                 ),
@@ -63,6 +61,8 @@ class Lambpy(App):
         run.disabled = True
         next = app.get_widget_by_id("next")
         next.disabled = True
+        save = app.get_widget_by_id("save")
+        save.disabled = True
 
     def on_lambda_exec(self, event):
         if self.screen != self.default_screen:
@@ -71,7 +71,7 @@ class Lambpy(App):
         if run.disabled:
             return
 
-        input = app.get_widget_by_id("input")
+        input = app.get_widget_by_id("input_exp_run")
         reduction_steps = app.get_widget_by_id("reduction_steps")
         exp = parse(input.value, rule_list=rules)
         execution = Execution(exp)
@@ -81,6 +81,10 @@ class Lambpy(App):
         next.disabled = False
         app.set_focus(next)
         next.disabled = reduction_steps.is_complete()
+        save = app.get_widget_by_id("save")
+        save.disabled = False
+        if next.disabled:
+            app.set_focus(save)
 
     def on_lambda_next(self, event):
         if self.screen != self.default_screen:
@@ -101,11 +105,18 @@ class Lambpy(App):
         if self.screen != self.default_screen:
             return
         input = event.input
-        value = input.value
-        el = parse(value, rule_list=rules)
-        invalid = el is None
         run = app.get_widget_by_id("run")
-        run.disabled = invalid
+        run.disabled = not input.is_valid
+
+    def on_save_rule(self, event):
+        global rules
+        print("before", len(rules))
+        rules.add(event.name, event.expression)
+        print("after", len(rules))
+        rule_list = app.get_widget_by_id("rules")
+        rule_list.update()
+        print("rule_list", len(rule_list.rules))
+        app.set_focus(app.get_widget_by_id("input_exp_run"))
 
 
 if __name__ == "__main__":

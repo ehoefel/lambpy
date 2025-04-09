@@ -78,7 +78,11 @@ parser = yacc.yacc(optimize=1, debug=False)
 
 
 def parse(exp_str, rule_list=None):
-    exp = parser.parse(exp_str, debug=False)
+    try:
+        exp = parser.parse(exp_str, debug=False)
+    except lex.LexError:
+        return None
+
     if exp is None:
         return None
     if rule_list is not None:

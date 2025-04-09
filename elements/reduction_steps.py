@@ -13,6 +13,7 @@ class ReductionSteps(ListView):
             return
         self.execution()
         self.append(ListItem(Label(str(self.execution))))
+        self.scroll_end()
 
     def is_complete(self):
         if not hasattr(self, "execution"):

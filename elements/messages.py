@@ -15,3 +15,12 @@ class LambdaSave(Message):
 
 class ModalClose(Message):
     pass
+
+
+class SaveRule(Message):
+
+    def __init__(self, name, expression):
+        super().__init__()
+        self.name = name
+        self.expression = expression
+    pass

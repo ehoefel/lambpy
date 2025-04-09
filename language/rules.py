@@ -23,3 +23,6 @@ class LambdaRules:
 
     def items(self):
         return self._items.items()
+
+    def __repr__(self):
+        return ", ".join([str(x) for x in self._items.items()])
