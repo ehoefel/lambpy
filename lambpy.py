@@ -19,6 +19,9 @@ from elements.rules import RuleList
 from elements.modal import SaveModal
 from language.rules import LambdaRules
 
+import argparse
+import pathlib
+
 rules = LambdaRules()
 
 
@@ -120,6 +123,24 @@ class Lambpy(App):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        prog="lambpy",
+        description="Lambda Calculus interpreter in Python"
+    )
+    parser.add_argument("-r", "--rules", type=pathlib.Path)
+    args = parser.parse_args()
     app = Lambpy()
+    if args.rules is not None:
+        try:
+            with open(args.rules) as fp:
+                for line in fp:
+                    line = line.rstrip()
+                    name, exp = line.split("=")
+                    name = name.lstrip().rstrip()
+                    exp = exp.lstrip().rstrip()
+                    rules.add(name, exp)
+        except FileNotFoundError:
+            parser.print_usage()
+            exit()
 
     app.run()
