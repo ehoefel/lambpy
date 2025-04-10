@@ -23,7 +23,7 @@ rules = LambdaRules()
 
 
 class Lambpy(App):
-    CSS_PATH = "lambpy.tcss"
+    CSS_PATH = "css/lambpy.tcss"
     AUTO_FOCUS = "#input_exp_run"
 
     def compose(self):

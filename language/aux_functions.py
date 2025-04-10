@@ -242,7 +242,8 @@ def call(exp, target=None):
         Application: application_call,
         Abstraction: abstraction_call,
         Rule: lambda x, y: Value(x, x.expression),
-        Expression: expression_call
+        Expression: expression_call,
+        Grouping: expression_call
     }
     key = type(exp)
     if key in map.keys():

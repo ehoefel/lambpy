@@ -1,4 +1,4 @@
-from language.aux_functions import call, to_str
+from language.aux_functions import call, to_str, debug_repr
 from language.parser import parse
 from language.expression import Rule
 
