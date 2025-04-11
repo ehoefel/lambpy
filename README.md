@@ -7,6 +7,8 @@ lambpy is a Lambda Calculus interpreter implemented in Python, designed to provi
 
 ![](screenshots/Lambpy_2025-04-11T18_12_47_115399.svg)
 
+![](screenshots/Lambpy_2025-04-11T18_16_42_740708.svg)
+
 ![](screenshots/Lambpy_2025-04-11T18_10_01_776694.svg)
 
 ## Acknowledgements
