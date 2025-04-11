@@ -43,8 +43,8 @@ Screen {
   width: 100%;
   layout: grid;
   grid-size: 5;
-  padding: 0 1;
-  padding-top: 1;
+  padding: 1;
+  padding-left: 2;
   grid-columns: auto auto 1fr auto auto;
   grid-gutter: 1;
 }

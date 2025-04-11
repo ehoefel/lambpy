@@ -128,9 +128,20 @@ if __name__ == "__main__":
         description="Lambda Calculus interpreter in Python"
     )
     parser.add_argument("-r", "--rules", type=pathlib.Path)
+    parser.add_argument("-s", "--serve", action="store_const", const=True)
+    parser.add_argument("-H", "--host", type=ascii, default="localhost")
+    parser.add_argument("-p", "--port", type=int, default=8000)
+    parser.add_argument("-n", "--noserve", action="store_const", const=True)
     args = parser.parse_args()
     app = Lambpy()
-    if args.rules is not None:
+    if args.serve is not None and args.noserve is None:
+        import sys
+        from textual_serve.server import Server
+        s_args = " ".join(["python"] + sys.argv + ["--noserve"])
+        title = "λ Lambda Calculus Calculator"
+        server = Server(s_args, args.host.replace("'", ""), args.port, title)
+        server.serve()
+    elif args.rules is not None:
         try:
             with open(args.rules) as fp:
                 for line in fp:
@@ -143,4 +154,5 @@ if __name__ == "__main__":
             parser.print_usage()
             exit()
 
-    app.run()
+    if args.serve is None or args.noserve is not None:
+        app.run()
