@@ -5,11 +5,11 @@ lambpy is a Lambda Calculus interpreter implemented in Python, designed to provi
 
 ## Screenshots
 
-![](screenshots/1.svg)
+![](docs/screenshots/1.svg)
 
-![](screenshots/2.svg)
+![](docs/screenshots/2.svg)
 
-![](screenshots/3.svg)
+![](docs/screenshots/3.svg)
 
 ## Acknowledgements
 
@@ -20,17 +20,21 @@ lambpy is a Lambda Calculus interpreter implemented in Python, designed to provi
 
 ## Features
 
-
 - syntax highlighting,
 - rewrite rules,
-- load and save rules.
+- load rules from an input file
 
 The program can be executed either on a terminal console or browser page.
 
 
 ## Installation
 
-Download the zip file of the project
+```
+git clone https://github.com/ehoefel/lambpy.git
+cd lambpy
+pip install -r requirements.txt
+```
+
 
 ## Roadmap
 
