@@ -18,8 +18,6 @@ expressions, with some quality of life features.
  - [Lambda Calculus Calculator](https://lambdacalc.io/)
  - [Textual](https://textual.textualize.io/)
 
-
-
 ## Features
 
 - syntax highlighting,
@@ -29,16 +27,13 @@ expressions, with some quality of life features.
 The program can be executed either on a terminal console or browser page.
 
 
-## Installation
-
-
-### Pre-compiled
+## Installing
 
 Just download the
 [latest](https://github.com/ehoefel/lambpy/releases/tag/v1.0-beta)
 Lambpy release.
 
-### Manual compilation
+## Building from source
 
 1. First, clone the repository
 
@@ -70,6 +65,42 @@ python src/lambpy/lambpy.py
 ```
 deactivate
 ```
+
+## Usage
+
+By default, Lambpy can be executed without any arguments and will launch a
+fresh lambda execution environment.
+
+```
+lambpy
+```
+
+### Rules input file
+
+Lambpy can read a batch of lambda rules from an input file with the following
+command syntac
+
+```
+lambpy -r FILE
+```
+
+a `RULES` file is a text file where each line represents a single rule.
+Rules must be written in the following syntax:
+
+```
+NAME = EXPRESSION
+
+```
+
+where
+- NAME: is the name of the rule
+- EXPRESSION: is the lambda expression represented by the rule
+
+### Examples
+
+- [examples/rules.lambda](https://github.com/ehoefel/lambpy/blob/main/examples/rules.lambda)
+
+
 
 
 ## Roadmap
