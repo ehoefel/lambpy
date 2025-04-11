@@ -5,14 +5,17 @@ Lambpy is a Lambda Calculus interpreter implemented in Python, designed to
 provide an interactive experience for writing and executing lambda
 expressions, with some quality of life features.
 
-## Screenshots
-
 ![](docs/screenshots/3.svg)
 
 ## Acknowledgements
 
- - [Lambda Calculus Calculator](https://lambdacalc.io/)
- - [Textual](https://textual.textualize.io/)
+ - [Lambda Calculus Calculator](https://lambdacalc.io/): for inspiring this
+ project. The UI layout and design were basically copied from that project.
+ Finally, it was also immensely useful as a stable reference when testing the
+ parsing and execution of lambda calculus programs.
+ - [Textual](https://textual.textualize.io/): for making it possible to create
+ such high quality TUI applications, with extensive number of features,
+ incredibly easy to use and with an amazing documentation.
 
 ## Features
 
