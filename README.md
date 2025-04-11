@@ -7,10 +7,6 @@ expressions, with some quality of life features.
 
 ## Screenshots
 
-![](docs/screenshots/1.svg)
-
-![](docs/screenshots/2.svg)
-
 ![](docs/screenshots/3.svg)
 
 ## Acknowledgements
@@ -66,7 +62,7 @@ python src/lambpy/lambpy.py
 deactivate
 ```
 
-## Usage
+## Execution
 
 By default, Lambpy can be executed without any arguments and will launch a
 fresh lambda execution environment.
@@ -89,18 +85,56 @@ Rules must be written in the following syntax:
 
 ```
 NAME = EXPRESSION
-
 ```
 
 where
-- NAME: is the name of the rule
-- EXPRESSION: is the lambda expression represented by the rule
+- `NAME`: is the name of the rule
+- `EXPRESSION`: is the lambda expression represented by the rule
 
 ### Examples
 
 - [examples/rules.lambda](https://github.com/ehoefel/lambpy/blob/main/examples/rules.lambda)
 
 
+## Usage
+
+### Navigation:
+
+- `TAB` and `SHIFT-TAB`: navigate element focus
+- `ENTER`: press button or trigger input enter events
+- Alternatively, any button can be pressed with a mouse click.
+- `ESC` closes any open modal.
+- `CTRL-Q` closes the application.
+
+### Writing your first lambda expression:
+
+Once Lambpy is loaded, the expression input field will automatically be focused.
+Use the field to enter the following expression:
+
+```
+λx.x
+```
+The `λ` symbol can be written by writing `\` with your keyboard.
+
+After writing the expression, press `ENTER` or click on the `RUN` button.
+The expression will now be presented in the execution area.
+
+Since this expression has no available *reductions*, the **Next** button
+will be disabled.
+
+### Saving a lambda rule
+
+After inputting a lambda expression into the execution area, the **Save** button
+will be available.
+
+Use the **Save** button if you want to create a nickname to an expression.
+
+After clicking on the button, a form will appear, asking for an identifier for
+the rule.
+
+Write down the identifier for the rule and press **Save** to register the rule.
+
+You can now reference this rule in your future expressions.
 
 
 ## Roadmap
@@ -111,10 +145,11 @@ where
 - Improve button style
 - Improve visualization of long rules
 - Test on different operating systems, terminal emulators, and screen sizes
-- Improve code quality, remove unecessary code, improve maintenability
+- Improve code quality, remove unnecessary code, improve maintenance
 - Allow editing / removal of rules
 - Implement user settings
 - Implement error highlighting on user input token
 - Implement error messages
 - Improve performance
+- Add webpage serve functionality to command-line arguments
 
