@@ -145,14 +145,14 @@ You can now reference this rule in your future expressions.
 - Implement functionality for Help and Info buttons
 - Be able to select and execute specific parts of the expression
 - Add UI button shortcuts (Save)
-- Improve button style
+- Make smaller buttons
 - Improve visualization of long rules
+- Allow rule window minimization
 - Test on different operating systems, terminal emulators, and screen sizes
 - Improve code quality, remove unnecessary code, improve maintenance
-- Allow editing / removal of rules
+- Allow live editing / removal of rules
 - Implement user settings
 - Implement error highlighting on user input token
 - Implement error messages
 - Improve performance
-- Add webpage serve functionality to command-line arguments
 
