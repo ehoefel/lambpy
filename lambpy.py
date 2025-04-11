@@ -41,11 +41,13 @@ class Lambpy(App):
         yield Horizontal(
             Vertical(
                 Horizontal(
-                    InputField(placeholder="(λx.x) a", id="input_exp_run"),
+                    Horizontal(
+                        InputField(placeholder="(λx.x) a", id="input_exp_run")
+                    ),
                     Run("Run", variant="error", id="run"),
                     id="input_area"
                 ),
-                ReductionSteps(id="reduction_steps"),
+                ReductionSteps(),
                 Horizontal(
                     Next("Next", variant="primary", id="next"),
                     Save("Save", variant="warning", id="save"),
@@ -58,6 +60,7 @@ class Lambpy(App):
         )
 
     def on_mount(self):
+        self.theme = "flexoki"
         if self.screen != self.default_screen:
             return
         run = app.get_widget_by_id("run")

@@ -1,11 +1,11 @@
 from textual.widget import Widget
-from textual.widgets import ListView, ListItem, Label
+from textual.widgets import ListView, ListItem, Label, Static
 from language.aux_functions import to_str
 from textual.reactive import reactive
-from textual.containers import Horizontal
+from textual.containers import Horizontal, Vertical
 
 
-class Rule(Widget):
+class Rule(Widget, can_focus=False):
 
     def __init__(self, name, value):
         super().__init__()
@@ -20,7 +20,7 @@ class Rule(Widget):
         )
 
 
-class RuleList(Widget):
+class RuleList(Static):
 
     rules_reactive = reactive("", recompose=True)
 
@@ -31,14 +31,14 @@ class RuleList(Widget):
 
     def update(self):
         self.rules_reactive = str(self.rules)
-        print("update", self.rules_reactive)
 
     def compose(self):
         yield Label("Rules", classes="title")
 
         if len(self.rules) > 0:
-            yield ListView(
-                ListItem(*[Rule(name, exp) for name, exp in self.rules])
+            yield Vertical(
+                *[Rule(name, exp) for name, exp in self.rules],
+                classes="body"
             )
         else:
             yield ListView()

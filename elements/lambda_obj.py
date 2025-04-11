@@ -146,6 +146,7 @@ class Abstraction(Expression):
     def __init__(self, exp):
         super().__init__(exp)
         self.variable = get_renderable(exp.variable)
+        self.variable.add_class("abs-var")
         self.exp = get_renderable(exp.expression)
         self.vars = []
         self.walk(lambda exp: self.assign_var(exp))

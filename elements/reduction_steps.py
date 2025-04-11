@@ -2,7 +2,10 @@ from textual.widgets import ListView, ListItem
 from elements.lambda_obj import Executable
 
 
-class ReductionSteps(ListView):
+class ReductionSteps(ListView, can_focus=False):
+
+    def __init__(self):
+        super().__init__(id="reduction_steps")
 
     def start(self, execution):
         self.execution = execution
