@@ -1,4 +1,5 @@
-from textual.widgets import ListView, ListItem, Label
+from textual.widgets import ListView, ListItem
+from elements.lambda_obj import Executable
 
 
 class ReductionSteps(ListView):
@@ -6,13 +7,14 @@ class ReductionSteps(ListView):
     def start(self, execution):
         self.execution = execution
         self.clear()
-        self.append(ListItem(Label(str(execution))))
+        renderable = Executable(execution.last_exec)
+        self.append(ListItem(renderable))
 
     def next_step(self):
         if not hasattr(self, "execution"):
             return
         self.execution()
-        self.append(ListItem(Label(str(self.execution))))
+        self.append(ListItem(Executable(self.execution.last_exec)))
         self.scroll_end()
 
     def is_complete(self):

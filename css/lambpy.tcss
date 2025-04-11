@@ -74,13 +74,52 @@ Input.-valid {
   min-width: 7;
 }
 
-#reduction_steps {
-  padding: 1;
+#reduction_steps ListItem {
+  background: transparent;
 }
 
-#reduction_steps ListItem {
-  margin-bottom: 1;
+#reduction_steps ListItem Executable {
+  height: auto;
+  width: auto;
+  border: round black;
 }
+
+#reduction_steps ListItem Executable * {
+  height: auto;
+  width: auto;
+}
+
+#reduction_steps ListItem Executable Application.executable {
+  margin-top: -1;
+  height: 2;
+  color: black;
+}
+
+#reduction_steps ListItem Executable Abstraction.nonexecutable {
+  color: white !important;
+}
+
+#reduction_steps ListItem Executable Application.executable Expression.exp1 {
+  background: springgreen !important;
+  border: wide springgreen !important;
+  color: black;
+}
+
+#reduction_steps ListItem Executable Application.executable Expression.exp1 > * {
+  background: springgreen !important;
+  color: black;
+}
+
+#reduction_steps ListItem Executable Application.executable Expression.exp2 > * {
+  border: wide springgreen !important;
+}
+
+#reduction_steps ListItem Executable Rule Label {
+  background: gold;
+  color: black;
+}
+
+
 
 #rules Label {
   border-top: tall $surface-lighten-1;

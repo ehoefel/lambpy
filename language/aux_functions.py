@@ -34,6 +34,14 @@ def apply_exp_rec(exp, condition_fn, operation):
         apply_exp_rec(child, condition_fn, operation)
 
 
+def can_exec(exp):
+    if type(exp) == Application:
+        return type(exp.exp1) == Abstraction
+    if type(exp) == Rule:
+        return True
+    return False
+
+
 def next_exec(exp):
     if not isinstance(exp, Expression):
         return []
@@ -241,7 +249,7 @@ def call(exp, target=None):
     map = {
         Application: application_call,
         Abstraction: abstraction_call,
-        Rule: lambda x, y: Value(x, x.expression),
+        Rule: lambda x, y: x.expression,
         Expression: expression_call,
         Grouping: expression_call
     }

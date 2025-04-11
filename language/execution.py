@@ -36,6 +36,7 @@ class Execution():
         self.last_exec = res
         self.next_exec_cache = None
         self.complete_exec_cache = None
+        print(debug_repr(res))
         return True
 
     def get_result(self):
