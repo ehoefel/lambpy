@@ -3,7 +3,7 @@ from textual.widgets import Label
 from textual.containers import Horizontal
 
 from language import expression as langexp
-from language.aux_functions import can_exec
+from language.aux_functions import next_to_exec
 
 
 def get_renderable(exp):
@@ -24,53 +24,37 @@ def get_renderable(exp):
 
 class Executable(Widget):
 
-    class HoverStack():
-
-        def __init__(self):
-            self.list = []
-            pass
-
-        def clear_class(self):
-            for other in self.list:
-                other.remove_class("hover")
-
-        def update_class(self):
-            if len(self.list) == 0:
-                return
-            self.list[-1].add_class("hover")
-            print(self.list)
-
-        def set(self, stack):
-            print("set", self.list, stack)
-            if len(self.list) > len(stack):
-                return
-            self.clear_class()
-            self.list = stack
-            self.update_class()
-            print("result", self.list)
-
-        def remove(self, el):
-            print("remove", self.list, el)
-            if el in self.list:
-                if el == self.list[-1]:
-                    el.remove_class("hover")
-                self.list.remove(el)
-            self.update_class()
-            print("result", self.list)
-
     def __init__(self, exp):
         super().__init__()
         self.exp = get_renderable(exp)
-        self.hover_stack = Executable.HoverStack()
+        nte = next_to_exec(exp)
+        self.executable = None
+
+        def highlight_nte(other):
+            if self.executable is not None:
+                return
+            if other.literal == nte:
+                self.executable = other
+                other.set_executable()
+
+        self.exp.walk(highlight_nte)
 
     def compose(self):
         yield self.exp
+        operation = None
+        if type(self.executable) == Rule:
+            operation = Label("δ", classes="operation delta")
+        if type(self.executable) == Application:
+            operation = Label("β", classes="operation beta")
 
-    def hover(self, stack):
-        self.hover_stack.set(stack)
-
-    def hover_off(self, el):
-        self.hover_stack.remove(el)
+        if operation is not None:
+            yield Horizontal(
+                Label("∵", classes="therefore"),
+                operation,
+                classes="reduction_type"
+            )
+        else:
+            yield Horizontal()
 
 
 class Expression(Widget):
@@ -78,21 +62,22 @@ class Expression(Widget):
     def __init__(self, exp):
         super().__init__()
         self.literal = exp
-        if can_exec(self.literal):
-            self.add_class("executable")
+        if type(self) == Expression:
+            self.exp = get_renderable(self.literal.expression)
+
+    def get_walkable(self):
+        return [self.exp]
 
     def compose(self):
-        if not hasattr(self, "exp"):
-            self.exp = get_renderable(self.literal.expression)
         yield self.exp
 
-    def hover(self, stack):
-        self.parent.hover([self] + stack)
+    def walk(self, fn):
+        fn(self)
+        for exp in self.get_walkable():
+            exp.walk(fn)
 
-    def hover_off(self, el=None):
-        if el is None:
-            el = self
-        self.parent.hover_off(el)
+    def set_executable(self):
+        self.add_class("executable")
 
 
 class Grouping(Expression):
@@ -118,21 +103,27 @@ class Application(Expression):
         self.exp2 = get_renderable(exp.exp2)
         self.exp2.add_class("exp2")
 
+    def get_walkable(self):
+        return [self.exp1, self.exp2]
+
     def compose(self):
+        el1 = self.exp1
+        if type(self.exp1) == Abstraction:
+            el1 = Horizontal(
+                Label("("),
+                el1,
+                Label(")"),
+            )
+
         yield Horizontal(
-            self.exp1,
+            el1,
             Label(" "),
             self.exp2
         )
 
-    def on_enter(self, event):
-        self.hover([])
-        pass
-        # self.root.hover_stack.add(self)
-        # self.add_class("hover")
-
-    def on_leave(self, event):
-        self.hover_off()
+    def set_executable(self):
+        super().set_executable()
+        self.exp1.set_executable()
 
 
 class Variable(Expression):
@@ -143,6 +134,12 @@ class Variable(Expression):
     def compose(self):
         yield Label(self.literal.symbol)
 
+    def get_walkable(self):
+        return []
+
+    def set_executable(self):
+        self.add_class("destination")
+
 
 class Abstraction(Expression):
 
@@ -150,23 +147,23 @@ class Abstraction(Expression):
         super().__init__(exp)
         self.variable = get_renderable(exp.variable)
         self.exp = get_renderable(exp.expression)
+        self.vars = []
+        self.walk(lambda exp: self.assign_var(exp))
+
+    def set_executable(self):
+        super().set_executable()
+        for var in self.vars:
+            var.set_executable()
+
+    def assign_var(self, exp):
+        if type(exp) != Variable:
+            return
+        if self.literal.variable == exp.literal:
+            self.vars.append(exp)
 
     def compose(self):
-        if not self.has_class("executable"):
-            p = self.parent
-            print(self, p, type(p))
-            has_exec = False
-            while not isinstance(p, Executable):
-                print('checking', p)
-                if p.has_class("executable"):
-                    print('has class')
-                    has_exec = True
-                    break
-                p = p.parent
-            if not has_exec:
-                self.add_class("nonexecutable")
         yield Horizontal(
-            Label("λ"),
+            Label("λ", classes="lambda"),
             self.variable,
             Label("."),
             self.exp
@@ -181,9 +178,5 @@ class Rule(Variable):
     def compose(self):
         yield Label(self.literal.symbol)
 
-    def on_enter(self, event):
-        self.hover([])
-
-    def on_leave(self, event):
-        self.hover_off()
-        pass
+    def set_executable(self):
+        self.add_class("executable")

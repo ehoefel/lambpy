@@ -42,30 +42,6 @@ def can_exec(exp):
     return False
 
 
-def next_exec(exp):
-    if not isinstance(exp, Expression):
-        return []
-    if type(exp) == Variable:
-        return []
-    if type(exp) in [Expression, Abstraction, Grouping]:
-        nexp = next_exec(exp.expression)
-        if len(nexp) > 0:
-            return nexp + [exp]
-        return []
-    if type(exp) == Rule:
-        return [exp]
-    if type(exp) == Application:
-        if type(exp.exp1) == Abstraction:
-            return [exp.exp1, exp.exp1.variable, exp]
-        nexp1 = next_exec(exp.exp1)
-        if len(nexp1) > 0:
-            return nexp1 + [exp]
-        nexp2 = next_exec(exp.exp2)
-        if len(nexp2) > 0:
-            return nexp2 + [exp]
-        return []
-
-
 def priority(exp, can_consume=False):
     if not isinstance(exp, Expression):
         return 0
@@ -258,6 +234,32 @@ def call(exp, target=None):
         return map[key](exp, target)
 
     return exp
+
+
+def next_to_exec(exp):
+    if type(exp) == Variable:
+        return None
+    if type(exp) == Rule:
+        return exp
+    if type(exp) == Application:
+        can_consume = exp.exp2 is not None
+        p1 = priority(exp.exp1, can_consume=can_consume)
+        p2 = priority(exp.exp2)
+
+        if p1 <= 0 and p2 <= 0:
+            return None
+
+        exp1 = exp.exp1
+        exp2 = exp.exp2
+
+        if p1 >= p2:
+            if type(exp1) == Abstraction:
+                return exp
+            return next_to_exec(exp1)
+        else:
+            return next_to_exec(exp2)
+    if isinstance(exp, Expression):
+        return next_to_exec(exp.expression)
 
 
 def rename(exp, new_symbol):

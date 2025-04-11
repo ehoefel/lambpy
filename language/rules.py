@@ -9,7 +9,7 @@ class LambdaRules:
         self._items = {}
 
     def add(self, name, expression):
-        self._items[name] = Rule(name, parse(expression))
+        self._items[name] = Rule(name, parse(expression, rule_list=self))
 
     def apply(self, expression):
         for rule in self._items.values():

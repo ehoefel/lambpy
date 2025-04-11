@@ -2,6 +2,7 @@ from textual.widget import Widget
 from textual.widgets import ListView, ListItem, Label
 from language.aux_functions import to_str
 from textual.reactive import reactive
+from textual.containers import Horizontal
 
 
 class Rule(Widget):
@@ -11,8 +12,12 @@ class Rule(Widget):
         self.rule_name = name
         self.value = value
 
-    def render(self):
-        return "%s = %s" % (self.rule_name, to_str(self.value.expression))
+    def compose(self):
+        yield Horizontal(
+            Label(self.rule_name, classes="name"),
+            Label("=", classes="equals"),
+            Label(to_str(self.value.expression), classes="value"),
+        )
 
 
 class RuleList(Widget):
@@ -29,7 +34,7 @@ class RuleList(Widget):
         print("update", self.rules_reactive)
 
     def compose(self):
-        yield Label("Rules")
+        yield Label("Rules", classes="title")
 
         if len(self.rules) > 0:
             yield ListView(

@@ -113,12 +113,9 @@ class Lambpy(App):
 
     def on_save_rule(self, event):
         global rules
-        print("before", len(rules))
         rules.add(event.name, event.expression)
-        print("after", len(rules))
         rule_list = app.get_widget_by_id("rules")
         rule_list.update()
-        print("rule_list", len(rule_list.rules))
         app.set_focus(app.get_widget_by_id("input_exp_run"))
 
 
