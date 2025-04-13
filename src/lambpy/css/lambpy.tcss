@@ -123,61 +123,71 @@ Screen {
   Executable {
     height: auto;
     width: 100%;
-    layout: grid;
-    grid-size: 2;
-    grid-columns: auto 4;
+    layout: horizontal;
 
     * {
       height: auto;
       width: auto;
     }
 
-    Application.executable {
-      & > Horizontal > Horizontal > Abstraction.exp1 > Horizontal {
-        & > .lambda {
-          text-style: bold;
-          color: springgreen;
-        }
-
-        & > .abs-var {
-          text-style: bold;
-          color: springgreen;
-        }
-
-        .destination {
-          color: springgreen;
-          text-style: bold reverse;
-        }
-      }
-      & > Horizontal > .exp2 {
-          text-style: underline bold;
-      }
+    Grouping {
+      layout: horizontal;
     }
 
-    Rule Label {
+    Abstraction {
+      layout: horizontal;
+    }
+
+
+    Rule {
       color: gold;
     }
 
-    Rule.executable Label {
+    Rule.executable {
       text-style: bold reverse;
     }
 
-    .reduction_type {
+    Application {
+      layout: horizontal;
+
+      &.executable {
+        & > Abstraction.exp1 {
+          & > .lambda {
+            text-style: bold;
+            color: springgreen;
+          }
+
+          & > .abs-var {
+            text-style: bold;
+            color: springgreen;
+          }
+
+          .destination {
+            color: springgreen;
+            text-style: bold reverse;
+          }
+        }
+        & > .exp2 * {
+            text-style: underline !important;
+            color: springgreen !important;
+        }
+      }
+    }
+
+    .therefore {
       dock: right;
       text-style: bold;
+      margin-right: 3;
+    }
 
-      .therefore {
-        margin-right: 1;
+    .operation {
+      dock: right;
+      margin-right: 1;
+      &.beta {
+        color: springgreen;
       }
-
-      .operation {
-        margin-right: 1;
-        &.beta {
-          color: springgreen;
-        }
-        &.delta {
-          color: gold;
-        }
+      &.delta {
+        color: gold;
       }
     }
   }

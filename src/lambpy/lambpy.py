@@ -3,6 +3,7 @@
 # ∵
 # λ
 
+from textual import worker
 from language.parser import parse
 from language.execution import Execution
 from language.aux_functions import to_str
@@ -95,10 +96,16 @@ class Lambpy(App):
     def on_lambda_next(self, event):
         if self.screen != self.default_screen:
             return
+
         reduction_steps = app.get_widget_by_id("reduction_steps")
-        reduction_steps.next_step()
-        next = app.get_widget_by_id("next")
-        next.disabled = reduction_steps.is_complete()
+        self.run_worker(reduction_steps.next_step(), exclusive=True)
+
+    def on_worker_state_changed(self, event):
+        if event.worker.state == worker.WorkerState.SUCCESS:
+            if event.worker.name == "next_step":
+                reduction_steps = app.get_widget_by_id("reduction_steps")
+                next = app.get_widget_by_id("next")
+                next.disabled = reduction_steps.is_complete()
 
     def on_lambda_save(self, event):
         if self.screen != self.default_screen:

@@ -1,6 +1,5 @@
 from textual.widget import Widget
 from textual.widgets import Label
-from textual.containers import Horizontal
 
 from language import expression as langexp
 from language.aux_functions import next_to_exec
@@ -48,13 +47,8 @@ class Executable(Widget):
             operation = Label("β", classes="operation beta")
 
         if operation is not None:
-            yield Horizontal(
-                Label("∵", classes="therefore"),
-                operation,
-                classes="reduction_type"
-            )
-        else:
-            yield Horizontal()
+            yield Label("∵", classes="therefore")
+            yield operation
 
 
 class Expression(Widget):
@@ -87,11 +81,9 @@ class Grouping(Expression):
         self.exp = get_renderable(exp.expression)
 
     def compose(self):
-        yield Horizontal(
-            Label("("),
-            self.exp,
-            Label(")")
-        )
+        yield Label("(")
+        yield self.exp
+        yield Label(")")
 
 
 class Application(Expression):
@@ -107,19 +99,14 @@ class Application(Expression):
         return [self.exp1, self.exp2]
 
     def compose(self):
-        el1 = self.exp1
+        el1 = [self.exp1]
         if type(self.exp1) == Abstraction:
-            el1 = Horizontal(
-                Label("("),
-                el1,
-                Label(")"),
-            )
+            el1 = [Label("("), self.exp1, Label(")")]
 
-        yield Horizontal(
-            el1,
-            Label(" "),
-            self.exp2
-        )
+        for e in el1:
+            yield e
+        yield Label(" ")
+        yield self.exp2
 
     def set_executable(self):
         super().set_executable()
@@ -163,12 +150,10 @@ class Abstraction(Expression):
             self.vars.append(exp)
 
     def compose(self):
-        yield Horizontal(
-            Label("λ", classes="lambda"),
-            self.variable,
-            Label("."),
-            self.exp
-        )
+        yield Label("λ", classes="lambda")
+        yield self.variable
+        yield Label(".")
+        yield self.exp
 
 
 class Rule(Variable):

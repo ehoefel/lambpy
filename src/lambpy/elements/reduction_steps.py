@@ -13,12 +13,13 @@ class ReductionSteps(ListView, can_focus=False):
         renderable = Executable(execution.last_exec)
         self.append(ListItem(renderable))
 
-    def next_step(self):
+    async def next_step(self):
         if not hasattr(self, "execution"):
             return
         self.execution()
-        self.append(ListItem(Executable(self.execution.last_exec)))
-        self.scroll_end()
+        async with self.batch():
+            await self.append(ListItem(Executable(self.execution.last_exec)))
+        return self.scroll_end()
 
     def is_complete(self):
         if not hasattr(self, "execution"):
